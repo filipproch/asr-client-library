@@ -1,11 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-version = '0.1.1'
+version = project.projectVersion
 ext {
-    artifact = 'client-library'
-    libraryName = 'client-library'
-    mavenGroupId = 'com.github.filipproch.asr-client-library:client-library'
+    mavenGroupId = 'com.github.filipproch.asr-client-library'
 }
 
 android {
@@ -35,7 +33,7 @@ android {
 dependencies {
     testCompile 'junit:junit:4.12'
     
-    compile project(':shared-lib')
+    compile project(':shared')
 
     // Kotlin
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

@@ -1,11 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-version = '0.1.1'
+version = project.projectVersion
 ext {
-    artifact = 'shared-library'
-    libraryName = 'shared-library'
-    mavenGroupId = 'com.github.filipproch.asr-client-library:shared-library'
+    mavenGroupId = 'com.github.filipproch.asr-client-library'
 }
 
 android {

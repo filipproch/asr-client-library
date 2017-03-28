@@ -1,1 +1,1 @@
-include ':asrclientlibrary', ':shared-lib'
+include ':client', ':shared'

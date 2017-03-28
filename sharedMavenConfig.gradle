@@ -2,21 +2,6 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 group = project.mavenGroupId
 
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
-                packaging 'aar'
-                groupId mavenGroupId
-                artifactId artifact
-
-                // Add your description here
-                name libraryName
-            }
-        }
-    }
-}
-
 /*
 task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
     outputFormat = 'javadoc'
