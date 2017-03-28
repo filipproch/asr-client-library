@@ -1,12 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-version = '0.1.0'
+version = '0.1.1'
 ext {
-    artifact = 'asr-client-library'
-    libraryName = 'asr-client-library'
-
-    bintrayName = 'asr-client-library'
+    artifact = 'client-library'
+    libraryName = 'client-library'
+    mavenGroupId = 'com.github.filipproch.asr-client-library:client-library'
 }
 
 android {

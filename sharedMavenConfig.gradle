@@ -7,7 +7,7 @@ install {
         pom {
             project {
                 packaging 'aar'
-                groupId project.mavenGroupId
+                groupId mavenGroupId
                 artifactId artifact
 
                 // Add your description here

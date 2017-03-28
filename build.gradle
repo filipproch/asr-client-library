@@ -26,8 +26,6 @@ apply plugin: 'kotlin'
 project.ext {
     compileSdkVersion = 25
     buildToolsVersion = '25.0.2'
-
-    mavenGroupId = 'cz.zku.kky.asr'
 }
 
 allprojects {
