@@ -1,6 +1,6 @@
 package cz.zcu.kky.asrclientlibrary.event
 
-import cz.zcu.kky.asr.lib.AsrConfiguration
+import cz.zcu.kky.asr.lib.model.AsrConfiguration
 
 /**
  * TODO

@@ -1,7 +1,5 @@
 package cz.zcu.kky.asr.lib
 
-import android.os.Bundle
-
 /**
  * States of individual ASR Engines
  */
@@ -31,12 +29,5 @@ object AsrEngineState {
      * When the Engine cannot be used, superior to DISABLED
      */
     val UNAVAILABLE = 4
-
-    fun toBundle(engineId: String, state: Int): Bundle {
-        val bundle = Bundle()
-        bundle.putString(ResponseData.ENGINE_ID, engineId)
-        bundle.putInt(ResponseData.ENGINE_STATE, state)
-        return bundle
-    }
 
 }

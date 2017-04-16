@@ -1,4 +1,4 @@
-package cz.zcu.kky.asr.lib
+package cz.zcu.kky.asr.lib.model
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -10,20 +10,20 @@ class AsrConfiguration(
         val id: String,
         val name: String,
         val engineId: String,
-        val isBinaryGrammarFileSupported: Boolean)
+        val engineName: String)
     : Parcelable {
 
     private constructor(parcel: Parcel)
             : this(parcel.readString(), // id
             parcel.readString(), // name
             parcel.readString(), // engineId
-            (parcel.readInt() == 1)) // isBinaryGrammarFileSupported)
+            (parcel.readString())) // engineName)
 
     override fun writeToParcel(p: Parcel, flags: Int) {
         p.writeString(id)
         p.writeString(name)
         p.writeString(engineId)
-        p.writeInt(if (isBinaryGrammarFileSupported) 1 else 0)
+        p.writeString(engineName)
     }
 
     override fun describeContents(): Int {
