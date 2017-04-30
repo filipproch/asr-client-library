@@ -1,7 +1,7 @@
 package cz.zcu.kky.asrclientlibrary.connection
 
 import android.os.Messenger
-import cz.zcu.kky.asr.lib.Command
+import cz.zcu.kky.asr.lib.deprecated.Command
 import cz.zcu.kky.asr.lib.model.AsrConfiguration
 import cz.zcu.kky.asrclientlibrary.event.*
 import cz.zcu.kky.asrclientlibrary.event.engine.AsrEngineEvent
@@ -46,7 +46,7 @@ class AsrOperator {
             sharedObservable = messenger.observeIncomingMessages()
                     .map {
                         when (it.messageId) {
-                            /*Command.ASR_AVAILABLE_CONFIGURATIONS -> {
+                            /*AsrCommand.ASR_AVAILABLE_CONFIGURATIONS -> {
                                 AvailableConfigurationsListEvent(it.data.availableConfigurations())
                             }*/
                             Command.ASR_CONTROL_STATE -> {
@@ -55,13 +55,13 @@ class AsrOperator {
                             Command.ASR_STATE -> {
                                 AsrStateChangedEvent(it.data.state())
                             }/*
-                            Command.ASR_ENGINE_STATE -> {
+                            AsrCommand.ASR_ENGINE_STATE -> {
                                 AsrEngineStateChanged(it.data.engineState())
                             }
-                            Command.ASR_ENGINE_ENERGY -> {
+                            AsrCommand.ASR_ENGINE_ENERGY -> {
                                 AsrEngineEnergyChanged(it.data.engineEnergy())
                             }
-                            Command.ASR_RESULT -> {
+                            AsrCommand.ASR_RESULT -> {
                                 AsrResultReceivedEvent(it.data.asrResult())
                             }*/
                             Command.ASR_ERROR -> {

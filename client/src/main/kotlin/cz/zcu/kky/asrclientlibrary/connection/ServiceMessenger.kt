@@ -1,10 +1,10 @@
 package cz.zcu.kky.asrclientlibrary.connection
 
 import android.os.*
-import cz.zcu.kky.asr.lib.Command
-import cz.zcu.kky.asr.lib.RequestData
-import cz.zcu.kky.asr.lib.ResponseCode
-import cz.zcu.kky.asr.lib.ResponseData
+import cz.zcu.kky.asr.lib.deprecated.Command
+import cz.zcu.kky.asr.lib.deprecated.RequestData
+import cz.zcu.kky.asr.lib.deprecated.ResponseCode
+import cz.zcu.kky.asr.lib.deprecated.ResponseData
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrClientDisconnectedException
 import io.reactivex.Completable
 import io.reactivex.Observable

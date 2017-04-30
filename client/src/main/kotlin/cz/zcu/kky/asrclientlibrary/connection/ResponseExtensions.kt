@@ -1,7 +1,7 @@
 package cz.zcu.kky.asrclientlibrary.connection
 
 import android.os.Bundle
-import cz.zcu.kky.asr.lib.ResponseData
+import cz.zcu.kky.asr.lib.deprecated.ResponseData
 
 /**
  * TODO

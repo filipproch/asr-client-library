@@ -2,7 +2,7 @@ package cz.zcu.kky.asrclientlibrary.connection
 
 import android.os.Bundle
 import cz.zcu.kky.asr.lib.model.AsrConfiguration
-import cz.zcu.kky.asr.lib.RequestData
+import cz.zcu.kky.asr.lib.deprecated.RequestData
 
 /**
  * TODO
