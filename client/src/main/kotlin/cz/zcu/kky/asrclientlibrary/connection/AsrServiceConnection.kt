@@ -7,15 +7,15 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.os.Messenger
 import cz.zcu.kky.asrclientlibrary.event.ServiceEvent
-import cz.zcu.kky.asrclientlibrary.model.ConnectionState
-import cz.zcu.kky.asrclientlibrary.event.ServiceConnectionStateEvent
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrServiceUnavailableException
+import cz.zcu.kky.asrclientlibrary.model.ConnectionState
 import cz.zcu.kky.asrclientlibrary.util.bindServiceRx
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
 import io.reactivex.subjects.BehaviorSubject
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,10 +36,12 @@ object AsrServiceConnection {
      */
     private var serviceConn: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            serviceBound = true
             onConnected(service)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            serviceBound = false
             onDisconnected()
         }
     }
@@ -49,7 +51,6 @@ object AsrServiceConnection {
     /**
      *
      */
-    @Throws(AsrServiceUnavailableException::class)
     fun connect(context: Context): Completable {
         return context.bindServiceRx(serviceConn)
                 .retryWhen { errors ->
@@ -63,11 +64,13 @@ object AsrServiceConnection {
                         }
                     }
                 }
+                .doOnComplete { Timber.v("connect() - service started / bound") }
                 .andThen(observeConnectionState()
-                        .take(1)
                         .filter { it == ConnectionState.CONNECTED }
                         .firstOrError()
+                        .timeout(3000, TimeUnit.MILLISECONDS)
                         .toCompletable())
+                .doOnComplete { Timber.v("connect() - service connected") }
                 .andThen(operator.start())
     }
 
@@ -88,9 +91,7 @@ object AsrServiceConnection {
     }
 
     fun observeEvents(): Observable<ServiceEvent> {
-        return observeConnectionState()
-                .map { ServiceConnectionStateEvent(it) as ServiceEvent }
-                .mergeWith(operator.observe())
+        return operator.observe()
     }
 
     fun observeConnectionState(): Observable<ConnectionState> {
@@ -121,11 +122,9 @@ object AsrServiceConnection {
     private fun onConnected(service: IBinder?) {
         operator.setRemoteMessenger(Messenger(service))
         serviceConnectionSubject.onNext(ConnectionState.CONNECTED)
-        serviceBound = true
     }
 
     private fun onDisconnected() {
-        serviceBound = false
         serviceConnectionSubject.onNext(ConnectionState.DISCONNECTED)
         operator.reset()
     }

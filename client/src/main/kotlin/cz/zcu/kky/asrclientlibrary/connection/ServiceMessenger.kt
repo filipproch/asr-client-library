@@ -11,6 +11,8 @@ import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.subjects.PublishSubject
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 /**
  * TODO
@@ -37,10 +39,12 @@ class ServiceMessenger {
                 throw RuntimeException("remoteMessenger = null")
             }
 
+            Timber.v("registerWithService() - conditions met, sending command...")
             it.onComplete()
         }
                 .andThen(sendCommand(AsrCommand.CMD_INIT_SESSION))
-                .flatMapCompletable { waitForClientId(it) }
+                .doOnSuccess { Timber.v("registerWithService() - command sent, waiting for result...") }
+                .flatMapCompletable { waitForClientId(it).timeout(5000, TimeUnit.MILLISECONDS) }
     }
 
     fun unregisterWithService(): Completable {
@@ -60,7 +64,11 @@ class ServiceMessenger {
     fun observeCommandResponses(): Observable<AsrCommandResponse> {
         if (sharedCommandResponseObservable == null) {
             sharedCommandResponseObservable = observeEvent(AsrEvent.EVENT_COMMAND_RESPONSE)
-                    .map { it.data.getParcelable<AsrCommandResponse>(AsrEvent.FIELD_RESPONSE_OBJECT) }
+                    .map {
+                        it.data.classLoader = AsrCommandResponse::class.java.classLoader
+                        it.data.getParcelable<AsrCommandResponse>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                    }
+                    .doOnNext { Timber.v("command response arrived - $it") }
                     .share()
         }
         return sharedCommandResponseObservable!!
@@ -118,6 +126,7 @@ class ServiceMessenger {
 
     class IncomingHandler(private val communicator: ServiceMessenger) : Handler() {
         override fun handleMessage(msg: Message) {
+            Timber.v("handleMessage() - event = ${msg.what}, data = ${msg.data}")
             communicator.incomingEventSubject.onNext(IncomingEvent(msg.what, msg.data))
         }
     }

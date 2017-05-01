@@ -25,17 +25,26 @@ class AsrOperator {
 
     init {
         messenger.observeEvent(AsrEvent.EVENT_ASR_CONFIGURATIONS_CHANGED)
-                .map { it.data.getParcelableArrayList<AsrConfiguration>(AsrEvent.FIELD_RESPONSE_OBJECT) }
+                .map {
+                    it.data.classLoader = AsrConfiguration::class.java.classLoader
+                    it.data.getParcelableArrayList<AsrConfiguration>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                }
                 .map { AsrConfigurationsChangedEvent(it) }
                 .subscribe(serviceEventSubject)
 
         messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_RESULT)
-                .map { it.data.getParcelable<AsrEngineResult>(AsrEvent.FIELD_RESPONSE_OBJECT) }
+                .map {
+                    it.data.classLoader = AsrEngineResult::class.java.classLoader
+                    it.data.getParcelable<AsrEngineResult>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                }
                 .map { AsrEngineResultEvent(it) }
                 .subscribe(serviceEventSubject)
 
         messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_STATE_CHANGED)
-                .map { it.data.getParcelable<AsrEngineState>(AsrEvent.FIELD_RESPONSE_OBJECT) }
+                .map {
+                    it.data.classLoader = AsrEngineState::class.java.classLoader
+                    it.data.getParcelable<AsrEngineState>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                }
                 .map { AsrEngineStateChangedEvent(it) }
                 .subscribe(serviceEventSubject)
 
