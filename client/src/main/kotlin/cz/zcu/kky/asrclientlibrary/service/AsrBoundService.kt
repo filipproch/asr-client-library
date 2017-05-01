@@ -4,7 +4,7 @@ import android.app.Notification
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import cz.zcu.kky.asrclientlibrary.connection.ServiceConnection
+import cz.zcu.kky.asrclientlibrary.connection.AsrServiceConnection
 
 /**
  * TODO
@@ -19,22 +19,27 @@ abstract class AsrBoundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(FOREGROUND_NOTIFICATION, createOngoingNotification())
+        val notification = createOngoingNotification()
+        if (notification != null) {
+            startForeground(FOREGROUND_NOTIFICATION, createOngoingNotification())
+        }
 
-        ServiceConnection.connect(this)
+        AsrServiceConnection.connect(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         try {
-            ServiceConnection.close(this)
+            AsrServiceConnection.close(this)
         } catch (e: Exception) {
         }
 
         stopForeground(true)
     }
 
-    abstract fun createOngoingNotification(): Notification
+    protected open fun createOngoingNotification(): Notification? {
+        return null
+    }
 
     companion object {
         val FOREGROUND_NOTIFICATION = 1002

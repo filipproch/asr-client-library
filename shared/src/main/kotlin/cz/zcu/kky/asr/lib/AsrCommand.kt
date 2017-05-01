@@ -10,6 +10,7 @@ object AsrCommand {
     /* Command Codes */
 
     @JvmField val CMD_INIT_SESSION = 1000
+    @JvmField val CMD_TERMINATE_SESSION = 1001
 
     @JvmField val CMD_TAKE_CONTROL = 2000
     @JvmField val CMD_RELEASE_CONTROL = 2001

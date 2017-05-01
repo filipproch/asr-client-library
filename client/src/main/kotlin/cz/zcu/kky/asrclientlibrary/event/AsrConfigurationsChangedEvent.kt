@@ -7,4 +7,4 @@ import cz.zcu.kky.asr.lib.model.AsrConfiguration
  *
  * @author Filip Prochazka (@filipproch)
  */
-data class AvailableConfigurationsListEvent(val configurations: MutableList<AsrConfiguration>) : ServiceEvent
+data class AsrConfigurationsChangedEvent(val configurations: MutableList<AsrConfiguration>) : ServiceEvent

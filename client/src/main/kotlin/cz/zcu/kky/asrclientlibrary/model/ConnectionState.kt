@@ -1,4 +1,4 @@
-package cz.zcu.kky.asrclientlibrary.event.connection
+package cz.zcu.kky.asrclientlibrary.model
 
 /**
  * TODO

@@ -1,6 +1,7 @@
-package cz.zcu.kky.asrclientlibrary.event.connection
+package cz.zcu.kky.asrclientlibrary.event
 
 import cz.zcu.kky.asrclientlibrary.event.ServiceEvent
+import cz.zcu.kky.asrclientlibrary.model.ConnectionState
 
 /**
  * TODO

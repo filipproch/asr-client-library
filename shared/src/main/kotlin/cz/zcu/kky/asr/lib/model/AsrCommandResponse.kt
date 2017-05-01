@@ -9,7 +9,12 @@ import android.os.Parcelable
  *
  * @author Filip Prochazka (@filipproch)
  */
-data class AsrCommandResponse(val commandId: String, val success: Boolean, val extras: Bundle?) : Parcelable {
+data class AsrCommandResponse(
+        val command: Int,
+        val commandId: String,
+        val success: Boolean,
+        val extras: Bundle?
+) : Parcelable {
     companion object {
         @JvmField val CREATOR: Parcelable.Creator<AsrCommandResponse> = object : Parcelable.Creator<AsrCommandResponse> {
             override fun createFromParcel(source: Parcel): AsrCommandResponse = AsrCommandResponse(source)
@@ -20,6 +25,7 @@ data class AsrCommandResponse(val commandId: String, val success: Boolean, val e
     }
 
     constructor(source: Parcel) : this(
+            source.readInt(),
             source.readString(),
             1 == source.readInt(),
             source.readParcelable<Bundle?>(Bundle::class.java.classLoader)
@@ -28,6 +34,7 @@ data class AsrCommandResponse(val commandId: String, val success: Boolean, val e
     override fun describeContents() = 0
 
     override fun writeToParcel(dest: Parcel?, flags: Int) {
+        dest?.writeInt(command)
         dest?.writeString(commandId)
         dest?.writeInt((if (success) 1 else 0))
         dest?.writeParcelable(extras, 0)

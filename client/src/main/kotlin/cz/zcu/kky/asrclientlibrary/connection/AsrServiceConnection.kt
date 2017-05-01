@@ -7,13 +7,15 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.os.Messenger
 import cz.zcu.kky.asrclientlibrary.event.ServiceEvent
-import cz.zcu.kky.asrclientlibrary.event.connection.ConnectionState
-import cz.zcu.kky.asrclientlibrary.event.connection.ServiceConnectionStateEvent
+import cz.zcu.kky.asrclientlibrary.model.ConnectionState
+import cz.zcu.kky.asrclientlibrary.event.ServiceConnectionStateEvent
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrServiceUnavailableException
 import cz.zcu.kky.asrclientlibrary.util.bindServiceRx
 import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Observable
-import java.util.*
+import io.reactivex.functions.BiFunction
+import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
 /**
@@ -21,11 +23,13 @@ import java.util.concurrent.TimeUnit
  *
  * @author Filip Prochazka (@filipproch)
  */
-object ServiceConnection {
+object AsrServiceConnection {
+
+    private val MAX_CONNECTION_RETRIES = 5
 
     private var serviceBound: Boolean = false
 
-    private val serviceConnectionListeners: MutableList<(ConnectionState) -> Unit> = ArrayList()
+    private val serviceConnectionSubject = BehaviorSubject.createDefault(ConnectionState.DISCONNECTED)
 
     /**
      *
@@ -46,21 +50,25 @@ object ServiceConnection {
      *
      */
     @Throws(AsrServiceUnavailableException::class)
-    fun connect(context: Context): Observable<ServiceEvent> {
+    fun connect(context: Context): Completable {
         return context.bindServiceRx(serviceConn)
-                .toObservable<ServiceEvent>()
                 .retryWhen { errors ->
-                    errors.flatMap { error ->
+                    errors.zipWith(Flowable.range(1, MAX_CONNECTION_RETRIES), BiFunction { error: Throwable, _: Int ->
+                        error
+                    }).flatMap { error ->
                         if (error is AsrServiceUnavailableException) {
-                            Observable.error<Exception>(error)
+                            Flowable.error<Exception>(error)
                         } else {
-                            Observable.timer(3000, TimeUnit.MILLISECONDS)
+                            Flowable.timer(3000, TimeUnit.MILLISECONDS)
                         }
                     }
                 }
-                .flatMap { observeConnectionState() }
-                .map { ServiceConnectionStateEvent(it) as ServiceEvent }
-                .mergeWith { operator.start() }
+                .andThen(observeConnectionState()
+                        .take(1)
+                        .filter { it == ConnectionState.CONNECTED }
+                        .firstOrError()
+                        .toCompletable())
+                .andThen(operator.start())
     }
 
     private fun unbindService(context: Context): Completable {
@@ -82,28 +90,11 @@ object ServiceConnection {
     fun observeEvents(): Observable<ServiceEvent> {
         return observeConnectionState()
                 .map { ServiceConnectionStateEvent(it) as ServiceEvent }
-                .mergeWith { operator.observe() }
+                .mergeWith(operator.observe())
     }
 
     fun observeConnectionState(): Observable<ConnectionState> {
-        return Observable.create {
-            it.onNext(if (serviceBound) ConnectionState.CONNECTED else ConnectionState.DISCONNECTED)
-
-            val listener = { state: ConnectionState ->
-                it.onNext(state)
-                if (state == ConnectionState.DISCONNECTED) {
-                    it.onComplete()
-                }
-            }
-            synchronized(serviceConnectionListeners) {
-                serviceConnectionListeners.add(listener)
-            }
-            it.setCancellable {
-                synchronized(serviceConnectionListeners) {
-                    serviceConnectionListeners.remove(listener)
-                }
-            }
-        }
+        return serviceConnectionSubject
     }
 
     /**
@@ -111,7 +102,7 @@ object ServiceConnection {
      */
     fun close(context: Context): Completable {
         return operator.stop()
-                .andThen { unbindService(context) }
+                .andThen(unbindService(context))
     }
 
     /**
@@ -129,24 +120,14 @@ object ServiceConnection {
 
     private fun onConnected(service: IBinder?) {
         operator.setRemoteMessenger(Messenger(service))
-        invokeConnectionStateListeners(ConnectionState.CONNECTED)
+        serviceConnectionSubject.onNext(ConnectionState.CONNECTED)
         serviceBound = true
     }
 
     private fun onDisconnected() {
         serviceBound = false
-        invokeConnectionStateListeners(ConnectionState.DISCONNECTED)
+        serviceConnectionSubject.onNext(ConnectionState.DISCONNECTED)
         operator.reset()
-    }
-
-    private fun invokeConnectionStateListeners(state: ConnectionState) {
-        synchronized(serviceConnectionListeners) {
-            serviceConnectionListeners.forEach { it.invoke(state) }
-        }
-    }
-
-    interface ServiceConnectionListener {
-        fun onStateChanged(state: Int)
     }
 
     val ASR_SERVICE_INTENT_ACTION = "cz.zcu.kky.ASR_SERVICE"
