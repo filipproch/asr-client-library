@@ -11,7 +11,7 @@ import android.os.Parcelable
 data class AsrEngineState(
         val initialized: Boolean,
         val recognizing: Boolean,
-        val energyLevel: Float
+        val configurationKey: String?
 ) : Parcelable {
     companion object {
         @JvmField val CREATOR: Parcelable.Creator<AsrEngineState> = object : Parcelable.Creator<AsrEngineState> {
@@ -23,7 +23,7 @@ data class AsrEngineState(
     constructor(source: Parcel) : this(
             1 == source.readInt(),
             1 == source.readInt(),
-            source.readFloat()
+            source.readString()
     )
 
     override fun describeContents() = 0
@@ -31,6 +31,6 @@ data class AsrEngineState(
     override fun writeToParcel(dest: Parcel?, flags: Int) {
         dest?.writeInt((if (initialized) 1 else 0))
         dest?.writeInt((if (recognizing) 1 else 0))
-        dest?.writeFloat(energyLevel)
+        dest?.writeString(configurationKey)
     }
 }

@@ -5,12 +5,15 @@ import android.os.Messenger
 import cz.zcu.kky.asr.lib.AsrCommand
 import cz.zcu.kky.asr.lib.AsrEvent
 import cz.zcu.kky.asr.lib.model.AsrConfiguration
+import cz.zcu.kky.asr.lib.model.AsrControlCommand
 import cz.zcu.kky.asr.lib.model.AsrEngineResult
 import cz.zcu.kky.asr.lib.model.AsrEngineState
 import cz.zcu.kky.asrclientlibrary.event.*
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
+import timber.log.Timber
 
 /**
  * TODO
@@ -23,6 +26,8 @@ class AsrOperator {
 
     private val serviceEventSubject = PublishSubject.create<ServiceEvent>()
 
+    private val asrConfigurationsSubject = BehaviorSubject.create<AsrConfigurationsChangedEvent>()
+
     init {
         messenger.observeEvent(AsrEvent.EVENT_ASR_CONFIGURATIONS_CHANGED)
                 .map {
@@ -30,7 +35,11 @@ class AsrOperator {
                     it.data.getParcelableArrayList<AsrConfiguration>(AsrEvent.FIELD_RESPONSE_OBJECT)
                 }
                 .map { AsrConfigurationsChangedEvent(it) }
-                .subscribe(serviceEventSubject)
+                .subscribe {
+                    Timber.v("AsrConfigurationsChangedEvent - ${it.configurations}")
+                    asrConfigurationsSubject.onNext(it)
+                    serviceEventSubject.onNext(it)
+                }
 
         messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_RESULT)
                 .map {
@@ -82,6 +91,24 @@ class AsrOperator {
     fun releaseControl(): Completable {
         return messenger.sendCommand(AsrCommand.CMD_RELEASE_CONTROL)
                 .flatMapCompletable { commandId -> completeOnCommandResponse(commandId) }
+    }
+
+    fun requestLoadConfiguration(configId: String): Completable {
+        val data = Bundle()
+        data.putParcelable(AsrCommand.FIELD_ASR_COMMAND, AsrControlCommand.loadConfiguration(configId))
+        return messenger.sendCommand(AsrCommand.CMD_ASR_CONTROL, data)
+                .toCompletable()
+    }
+
+    fun requestReleaseConfiguration(): Completable {
+        val data = Bundle()
+        data.putParcelable(AsrCommand.FIELD_ASR_COMMAND, AsrControlCommand.releaseConfiguration())
+        return messenger.sendCommand(AsrCommand.CMD_ASR_CONTROL, data)
+                .toCompletable()
+    }
+
+    fun observeAsrConfigurations(): Observable<AsrConfigurationsChangedEvent> {
+        return asrConfigurationsSubject
     }
 
     private fun completeOnCommandResponse(commandId: String): Completable {

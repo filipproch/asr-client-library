@@ -34,6 +34,20 @@ data class AsrControlCommand(val code: Int, val extras: Bundle?) : Parcelable {
         /* Extra Fields */
 
         @JvmField val EXTRA_CONFIGURATION_ID = "config_id"
+        @JvmField val EXTRA_GRAMMAR_TYPE = "grammar_type"
+        @JvmField val EXTRA_GRAMMAR = "grammar"
+
+        /* Helper Methods */
+
+        fun loadConfiguration(configId: String): AsrControlCommand {
+            val data = Bundle()
+            data.putString(EXTRA_CONFIGURATION_ID, configId)
+            return AsrControlCommand(CMD_LOAD_CONFIGURATION, data)
+        }
+
+        fun releaseConfiguration(): AsrControlCommand {
+            return AsrControlCommand(CMD_RELEASE_CONFIGURATION, null)
+        }
     }
 
     constructor(source: Parcel) : this(
