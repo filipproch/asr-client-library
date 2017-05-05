@@ -4,16 +4,12 @@ import android.os.Bundle
 import android.os.Messenger
 import cz.zcu.kky.asr.lib.AsrCommand
 import cz.zcu.kky.asr.lib.AsrEvent
-import cz.zcu.kky.asr.lib.model.AsrConfiguration
-import cz.zcu.kky.asr.lib.model.AsrControlCommand
-import cz.zcu.kky.asr.lib.model.AsrEngineResult
-import cz.zcu.kky.asr.lib.model.AsrEngineState
+import cz.zcu.kky.asr.lib.model.*
 import cz.zcu.kky.asrclientlibrary.event.*
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
-import timber.log.Timber
 
 /**
  * TODO
@@ -27,6 +23,7 @@ class AsrOperator {
     private val serviceEventSubject = PublishSubject.create<ServiceEvent>()
 
     private val asrConfigurationsSubject = BehaviorSubject.create<AsrConfigurationsChangedEvent>()
+    private var asrGrammarsSubject = BehaviorSubject.create<AsrGrammarsChangedEvent>()
 
     init {
         messenger.observeEvent(AsrEvent.EVENT_ASR_CONFIGURATIONS_CHANGED)
@@ -36,8 +33,18 @@ class AsrOperator {
                 }
                 .map { AsrConfigurationsChangedEvent(it) }
                 .subscribe {
-                    Timber.v("AsrConfigurationsChangedEvent - ${it.configurations}")
                     asrConfigurationsSubject.onNext(it)
+                    serviceEventSubject.onNext(it)
+                }
+
+        messenger.observeEvent(AsrEvent.EVENT_ASR_GRAMMARS_CHANGED)
+                .map {
+                    it.data.classLoader = AsrGrammar::class.java.classLoader
+                    it.data.getParcelableArrayList<AsrGrammar>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                }
+                .map { AsrGrammarsChangedEvent(it) }
+                .subscribe {
+                    asrGrammarsSubject.onNext(it)
                     serviceEventSubject.onNext(it)
                 }
 
@@ -55,7 +62,9 @@ class AsrOperator {
                     it.data.getParcelable<AsrEngineState>(AsrEvent.FIELD_RESPONSE_OBJECT)
                 }
                 .map { AsrEngineStateChangedEvent(it) }
-                .subscribe(serviceEventSubject)
+                .subscribe {
+                    serviceEventSubject.onNext(it)
+                }
 
         messenger.observeCommandResponses()
                 .map { AsrCommandResponseEvent(it) }
@@ -109,6 +118,10 @@ class AsrOperator {
 
     fun observeAsrConfigurations(): Observable<AsrConfigurationsChangedEvent> {
         return asrConfigurationsSubject
+    }
+
+    fun observeAsrGrammars(): Observable<AsrGrammarsChangedEvent> {
+        return asrGrammarsSubject
     }
 
     private fun completeOnCommandResponse(commandId: String): Completable {
