@@ -4,7 +4,7 @@ import android.app.Notification
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import cz.zcu.kky.asrclientlibrary.connection.AsrServiceConnection
+import cz.zcu.kky.asrclientlibrary.api.AsrServiceConnection
 import timber.log.Timber
 
 /**
@@ -28,10 +28,11 @@ abstract class AsrBoundService : Service() {
         Timber.v("AsrService - connecting")
         AsrServiceConnection.connect(this)
                 .subscribe({
-                    Timber.v("AsrService - connected")
-                }, {
-                    Timber.e(it, "AsrService - connection failed, stopping self")
-                    this.stopSelf()
+                    Timber.v("AsrService - $it")
+                    if (it.success == false) {
+                        Timber.e(it.error, "AsrService - connection failed, stopping self")
+                        this.stopSelf()
+                    }
                 })
     }
 

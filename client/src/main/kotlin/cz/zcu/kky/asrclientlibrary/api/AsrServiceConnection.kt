@@ -1,4 +1,4 @@
-package cz.zcu.kky.asrclientlibrary.connection
+package cz.zcu.kky.asrclientlibrary.api
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,7 +6,6 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.os.Messenger
-import cz.zcu.kky.asrclientlibrary.event.ServiceEvent
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrServiceUnavailableException
 import cz.zcu.kky.asrclientlibrary.model.ConnectionState
 import cz.zcu.kky.asrclientlibrary.util.bindServiceRx
@@ -51,7 +50,7 @@ object AsrServiceConnection {
     /**
      *
      */
-    fun connect(context: Context): Completable {
+    fun connect(context: Context): Observable<Response> {
         return context.bindServiceRx(serviceConn)
                 .retryWhen { errors ->
                     errors.zipWith(Flowable.range(1, MAX_CONNECTION_RETRIES), BiFunction { error: Throwable, _: Int ->
@@ -90,10 +89,6 @@ object AsrServiceConnection {
         }
     }
 
-    fun observeEvents(): Observable<ServiceEvent> {
-        return operator.observe()
-    }
-
     fun observeConnectionState(): Observable<ConnectionState> {
         return serviceConnectionSubject
     }
@@ -103,7 +98,8 @@ object AsrServiceConnection {
      */
     fun close(context: Context): Completable {
         return operator.stop()
-                .andThen(unbindService(context))
+                .filter { !it.inProgress }
+                .flatMapCompletable { unbindService(context) }
     }
 
     /**

@@ -1,10 +1,12 @@
-package cz.zcu.kky.asrclientlibrary.connection
+package cz.zcu.kky.asrclientlibrary.api
 
 import android.os.*
 import cz.zcu.kky.asr.lib.AsrCommand
 import cz.zcu.kky.asr.lib.AsrEvent
 import cz.zcu.kky.asr.lib.model.AsrCommandResponse
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrClientDisconnectedException
+import cz.zcu.kky.asrclientlibrary.exceptions.MessengerNotRegisteredException
+import cz.zcu.kky.asrclientlibrary.exceptions.SessionInitializationFailedException
 import cz.zcu.kky.asrclientlibrary.util.RandomKey
 import io.reactivex.Completable
 import io.reactivex.Maybe
@@ -19,7 +21,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author Filip Prochazka (@filipproch)
  */
-class ServiceMessenger {
+internal class ServiceMessenger {
 
     private var clientMessenger = Messenger(IncomingHandler(this))
     private var clientId: String? = null
@@ -33,7 +35,7 @@ class ServiceMessenger {
         remoteMessenger = messenger
     }
 
-    fun registerWithService(): Completable {
+    fun registerWithService(): Observable<CommandResponse> {
         return Completable.create {
             if (remoteMessenger == null) {
                 throw RuntimeException("remoteMessenger = null")
@@ -43,17 +45,23 @@ class ServiceMessenger {
             it.onComplete()
         }
                 .andThen(sendCommand(AsrCommand.CMD_INIT_SESSION))
-                .doOnSuccess { Timber.v("registerWithService() - command sent, waiting for result...") }
-                .flatMapCompletable { waitForClientId(it).timeout(5000, TimeUnit.MILLISECONDS) }
+                .doOnNext {
+                    if (it.success == true) {
+                        clientId = it.data?.getString(AsrCommandResponse.EXTRA_CLIENT_ID)
+                        requireNotNull(clientId)
+                    } else if (it.success == false) {
+                        throw SessionInitializationFailedException()
+                    }
+                }
+                .timeout(5000, TimeUnit.MILLISECONDS)
     }
 
-    fun unregisterWithService(): Completable {
+    fun unregisterWithService(): Observable<CommandResponse> {
         if (remoteMessenger == null || clientId == null) {
-            return Completable.complete()
+            return Observable.error(MessengerNotRegisteredException())
         }
 
         return sendCommand(AsrCommand.CMD_TERMINATE_SESSION)
-                .toCompletable()
     }
 
     fun observeEvent(vararg eventCode: Int): Observable<IncomingEvent> {
@@ -81,14 +89,12 @@ class ServiceMessenger {
                 .firstElement()
     }
 
-    fun sendCommand(code: Int, data: Bundle = Bundle.EMPTY): Single<String> {
-        return Single.create<String> {
+    internal fun sendCommand(commandId: String, code: Int, data: Bundle): Observable<CommandResponse> {
+        return Observable.create<CommandResponse> {
             if (remoteMessenger == null) {
                 it.onError(RuntimeException("remoteMessenger = null, is service connected?"))
                 return@create
             }
-
-            val commandId = RandomKey.generate()
 
             val msg = Message.obtain(null, code)
             val bundle = Bundle()
@@ -102,26 +108,27 @@ class ServiceMessenger {
                 msg.data = bundle
                 msg.replyTo = clientMessenger
                 remoteMessenger?.send(msg)
-                it.onSuccess(commandId)
             } catch (e: DeadObjectException) {
                 // we are disconnected from the service (unexpectedly)
                 it.onError(AsrClientDisconnectedException())
                 remoteMessenger = null
             }
+
+            it.onComplete()
         }
     }
 
-    private fun waitForClientId(commandId: String): Completable {
-        return observeCommandResponses()
-                .filter { it.commandId == commandId }
-                .flatMapCompletable {
-                    if (it.success) {
-                        clientId = it.extras?.getString(AsrCommandResponse.EXTRA_CLIENT_ID)
-                        Completable.complete()
-                    } else {
-                        Completable.error(SessionInitializationFailedException())
-                    }
+    fun sendCommand(code: Int, data: Bundle = Bundle.EMPTY): Observable<CommandResponse> {
+        return Single.just(RandomKey.generate())
+                .flatMapObservable { commandId ->
+                    Observable.merge(
+                            observeCommandResponses().filter { it.commandId == commandId }
+                                    .map { CommandResponse.fromResponse(it) },
+                            sendCommand(commandId, code, data)
+                    )
                 }
+                .onErrorReturn { CommandResponse.fromError(it) }
+                .startWith(CommandResponse.WAITING)
     }
 
     class IncomingHandler(private val communicator: ServiceMessenger) : Handler() {
@@ -130,8 +137,4 @@ class ServiceMessenger {
         }
     }
 
-    data class IncomingEvent(val code: Int, val data: Bundle)
-
 }
-
-class SessionInitializationFailedException : RuntimeException()

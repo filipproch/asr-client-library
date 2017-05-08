@@ -2,7 +2,7 @@ package cz.zcu.kky.asrclientlibrary.util
 
 import android.content.Context
 import android.content.Intent
-import cz.zcu.kky.asrclientlibrary.connection.AsrServiceConnection
+import cz.zcu.kky.asrclientlibrary.api.AsrServiceConnection
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrClientException
 import cz.zcu.kky.asrclientlibrary.exceptions.AsrServiceUnavailableException
 import io.reactivex.Completable
