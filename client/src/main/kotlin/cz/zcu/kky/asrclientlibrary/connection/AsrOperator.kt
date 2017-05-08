@@ -85,7 +85,7 @@ class AsrOperator {
 
     // todo: is it really necessary?
     fun reset() {
-        stop().subscribe()
+        stop().subscribe({}, {})
     }
 
     fun observe(): Observable<ServiceEvent> {
@@ -112,6 +112,13 @@ class AsrOperator {
     fun requestReleaseConfiguration(): Completable {
         val data = Bundle()
         data.putParcelable(AsrCommand.FIELD_ASR_COMMAND, AsrControlCommand.releaseConfiguration())
+        return messenger.sendCommand(AsrCommand.CMD_ASR_CONTROL, data)
+                .toCompletable()
+    }
+
+    fun sendAsrControlCommand(controlCommand: AsrControlCommand): Completable {
+        val data = Bundle()
+        data.putParcelable(AsrCommand.FIELD_ASR_COMMAND, controlCommand)
         return messenger.sendCommand(AsrCommand.CMD_ASR_CONTROL, data)
                 .toCompletable()
     }

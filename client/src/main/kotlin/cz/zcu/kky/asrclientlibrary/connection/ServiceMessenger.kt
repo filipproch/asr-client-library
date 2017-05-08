@@ -126,7 +126,6 @@ class ServiceMessenger {
 
     class IncomingHandler(private val communicator: ServiceMessenger) : Handler() {
         override fun handleMessage(msg: Message) {
-            Timber.v("handleMessage() - event = ${msg.what}, data = ${msg.data}")
             communicator.incomingEventSubject.onNext(IncomingEvent(msg.what, msg.data))
         }
     }

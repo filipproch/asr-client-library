@@ -39,7 +39,7 @@ abstract class AsrBoundService : Service() {
         super.onDestroy()
         try {
             AsrServiceConnection.close(this)
-                    .subscribe()
+                    .subscribe({}, {})
         } catch (t: Throwable) {
             // ignore all exceptions
         }
