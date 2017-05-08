@@ -123,6 +123,7 @@ internal class ServiceMessenger {
                 .flatMapObservable { commandId ->
                     Observable.merge(
                             observeCommandResponses().filter { it.commandId == commandId }
+                                    .take(1)
                                     .map { CommandResponse.fromResponse(it) },
                             sendCommand(commandId, code, data)
                     )

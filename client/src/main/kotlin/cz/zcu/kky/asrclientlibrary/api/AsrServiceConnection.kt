@@ -71,6 +71,7 @@ object AsrServiceConnection {
                         .toCompletable())
                 .doOnComplete { Timber.v("connect() - service connected") }
                 .andThen(operator.start())
+                .onErrorReturn { Response(false, false, it) }
     }
 
     private fun unbindService(context: Context): Completable {
