@@ -39,7 +39,7 @@ object RandomKey {
 
         // Generate the last 12 characters
         if (!duplicateTime) {
-            cachedLastRandChars.forEachIndexed { i, v -> cachedLastRandChars[i] = (Math.random() * 64.0).toInt() }
+            cachedLastRandChars.forEachIndexed { i, _ -> cachedLastRandChars[i] = (Math.random() * 64.0).toInt() }
         } else {
             // If the timestamp hasn't changed since last push, use the same random number, except incremented by 1.
             val lastNot63 = cachedLastRandChars.indexOfLast { it != 63 }

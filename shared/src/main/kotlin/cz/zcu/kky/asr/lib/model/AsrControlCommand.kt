@@ -26,16 +26,23 @@ data class AsrControlCommand(val code: Int, val extras: Bundle?) : Parcelable {
 
         @JvmField val CMD_UPDATE_SENSITIVITY_LEVEL = 1004
 
-        @JvmField val CMD_SET_GRAMMAR = 1005
-        @JvmField val CMD_SET_GRAMMAR_FILE = 1006
+        @JvmField val CMD_ADD_GRAMMAR_FROM_STRING = 1005
+        @JvmField val CMD_ADD_GRAMMAR_FROM_FILE = 1006
         @JvmField val CMD_COMPILE_GRAMMAR = 1007
-        @JvmField val CMD_USE_COMPILED_GRAMMAR = 1008
+        @JvmField val CMD_SET_GRAMMAR = 1008
+
+        @JvmField val CMD_SET_SIGNAL_LEVEL = 1009
 
         /* Extra Fields */
 
         @JvmField val EXTRA_CONFIGURATION_ID = "config_id"
         @JvmField val EXTRA_GRAMMAR_TYPE = "grammar_type"
         @JvmField val EXTRA_GRAMMAR = "grammar"
+        @JvmField val EXTRA_GRAMMAR_FILE = "grammar_file"
+        @JvmField val EXTRA_GRAMMAR_KEY = "grammar_key"
+        @JvmField val EXTRA_USE_COMPILED = "use_compiled"
+        @JvmField val EXTRA_SENSITIVITY = "sensitivity"
+        @JvmField val EXTRA_SIGNAL_LEVEL = "signal_level"
 
         /* Helper Methods */
 

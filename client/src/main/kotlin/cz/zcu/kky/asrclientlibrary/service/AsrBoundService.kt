@@ -40,7 +40,8 @@ abstract class AsrBoundService : Service() {
         try {
             AsrServiceConnection.close(this)
                     .subscribe()
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
+            // ignore all exceptions
         }
 
         stopForeground(true)
