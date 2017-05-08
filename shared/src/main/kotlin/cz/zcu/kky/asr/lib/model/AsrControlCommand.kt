@@ -40,6 +40,7 @@ data class AsrControlCommand(val code: Int, val extras: Bundle?) : Parcelable {
         @JvmField val EXTRA_GRAMMAR = "grammar"
         @JvmField val EXTRA_GRAMMAR_FILE = "grammar_file"
         @JvmField val EXTRA_GRAMMAR_KEY = "grammar_key"
+        @JvmField val EXTRA_GRAMMAR_NAME = "grammar_name"
         @JvmField val EXTRA_USE_COMPILED = "use_compiled"
         @JvmField val EXTRA_SENSITIVITY = "sensitivity"
         @JvmField val EXTRA_SIGNAL_LEVEL = "signal_level"
