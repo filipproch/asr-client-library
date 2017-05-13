@@ -28,7 +28,7 @@ data class AsrControlCommand(val code: Int, val extras: Bundle?) : Parcelable {
 
         @JvmField val CMD_ADD_GRAMMAR_FROM_STRING = 1005
         @JvmField val CMD_ADD_GRAMMAR_FROM_FILE = 1006
-        @JvmField val CMD_COMPILE_GRAMMAR = 1007
+        @JvmField val CMD_CACHE_ACTIVE_GRAMMAR = 1007
         @JvmField val CMD_SET_GRAMMAR = 1008
 
         @JvmField val CMD_SET_SIGNAL_LEVEL = 1009
@@ -41,6 +41,7 @@ data class AsrControlCommand(val code: Int, val extras: Bundle?) : Parcelable {
         @JvmField val EXTRA_GRAMMAR_FILE = "grammar_file"
         @JvmField val EXTRA_GRAMMAR_KEY = "grammar_key"
         @JvmField val EXTRA_GRAMMAR_NAME = "grammar_name"
+        @JvmField val EXTRA_GRAMMAR_CACHE_IMMEDIATELY = "grammar_cache_immediately"
         @JvmField val EXTRA_USE_COMPILED = "use_compiled"
         @JvmField val EXTRA_SENSITIVITY = "sensitivity"
         @JvmField val EXTRA_SIGNAL_LEVEL = "signal_level"

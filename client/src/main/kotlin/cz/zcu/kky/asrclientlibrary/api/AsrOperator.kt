@@ -24,6 +24,8 @@ class AsrOperator internal constructor() {
     private val asrConfigurationsSubject = BehaviorSubject.create<AsrConfigurations>()
     private var asrGrammarsSubject = BehaviorSubject.create<AsrGrammarsChangedEvent>()
 
+    private val latestEngineStates = hashMapOf<String, AsrEngineState>()
+
     init {
         messenger.observeEvent(AsrEvent.EVENT_ASR_CONFIGURATIONS_CHANGED)
                 .map {
@@ -53,7 +55,9 @@ class AsrOperator internal constructor() {
                     it.data.getParcelable<AsrEngineResult>(AsrEvent.FIELD_RESPONSE_OBJECT)
                 }
                 .map { AsrEngineResultEvent(it) }
-                .subscribe(serviceEventSubject)
+                .subscribe {
+                    serviceEventSubject.onNext(it)
+                }
 
         messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_STATE_CHANGED)
                 .map {
@@ -62,12 +66,17 @@ class AsrOperator internal constructor() {
                 }
                 .map { AsrEngineStateChangedEvent(it) }
                 .subscribe {
+                    processEngineState(it.state)
                     serviceEventSubject.onNext(it)
                 }
 
         messenger.observeCommandResponses()
                 .map { AsrCommandResponseEvent(it) }
                 .subscribe(serviceEventSubject)
+    }
+
+    private fun processEngineState(state: AsrEngineState) {
+        latestEngineStates[state.engineKey] = state
     }
 
     internal fun setRemoteMessenger(messenger: Messenger) {
@@ -99,6 +108,20 @@ class AsrOperator internal constructor() {
 
     fun observeEvents(): Observable<ServiceEvent> {
         return serviceEventSubject
+    }
+
+    fun observeEngineState(): Observable<AsrEngineState> {
+        var observable = observeEvents()
+                .ofType(AsrEngineStateChangedEvent::class.java)
+                .map { it.state }
+
+        if (latestEngineStates.size > 0) {
+            observable = observable.startWith(
+                    Observable.fromIterable(latestEngineStates.map { it.value })
+            )
+        }
+
+        return observable
     }
 
     fun requestLoadConfiguration(configId: String): Observable<CommandResponse> {
