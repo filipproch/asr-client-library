@@ -16,6 +16,7 @@ object AsrEvent {
     @JvmField val EVENT_ASR_ENGINE_ENERGY_LEVEL_CHANGED = 2002
     @JvmField val EVENT_ASR_CONFIGURATIONS_CHANGED = 2003
     @JvmField val EVENT_ASR_GRAMMARS_CHANGED = 2004
+    @JvmField val EVENT_ASR_ACTIVE_CONFIGURATION_CHANGED = 2005
 
     /* Event Fields */
 

@@ -69,6 +69,15 @@ class AsrOperator internal constructor() {
                     processEngineState(it.state)
                     serviceEventSubject.onNext(it)
                 }
+        messenger.observeEvent(AsrEvent.EVENT_ASR_ACTIVE_CONFIGURATION_CHANGED)
+                .map {
+                    AsrActiveConfigurationChangedEvent(
+                            configKey = it.data.getString(AsrEvent.FIELD_RESPONSE_OBJECT)
+                    )
+                }
+                .subscribe {
+                    serviceEventSubject.onNext(it)
+                }
 
         messenger.observeCommandResponses()
                 .map { AsrCommandResponseEvent(it) }

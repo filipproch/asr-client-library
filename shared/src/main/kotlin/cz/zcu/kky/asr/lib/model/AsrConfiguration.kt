@@ -10,7 +10,8 @@ data class AsrConfiguration(
         val id: String,
         val name: String,
         val engineId: String,
-        val engineName: String) : Parcelable {
+        val engineName: String
+) : Parcelable {
     companion object {
         @JvmField val CREATOR: Parcelable.Creator<AsrConfiguration> = object : Parcelable.Creator<AsrConfiguration> {
             override fun createFromParcel(source: Parcel): AsrConfiguration = AsrConfiguration(source)
