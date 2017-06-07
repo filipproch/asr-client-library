@@ -24,6 +24,8 @@ class AsrOperator internal constructor() {
     private val asrConfigurationsSubject = BehaviorSubject.create<AsrConfigurations>()
     private var asrGrammarsSubject = BehaviorSubject.create<AsrGrammarsChangedEvent>()
 
+    private val serviceRegistrationSubject = BehaviorSubject.createDefault(false)
+
     private val latestEngineStates = hashMapOf<String, AsrEngineState>()
 
     init {
@@ -99,11 +101,19 @@ class AsrOperator internal constructor() {
 
     internal fun start(): Observable<Response> {
         return messenger.registerWithService()
+                .doOnNext {
+                    if (it.success == true) {
+                        serviceRegistrationSubject.onNext(true)
+                    }
+                }
                 .map { Response(it.waitingForResponse, it.success, it.error) }
     }
 
     internal fun stop(): Observable<Response> {
         return messenger.unregisterWithService()
+                .doOnSubscribe {
+                    serviceRegistrationSubject.onNext(false)
+                }
                 .map { Response(it.waitingForResponse, it.success, it.error) }
     }
 
@@ -131,6 +141,10 @@ class AsrOperator internal constructor() {
         }
 
         return observable
+    }
+
+    fun observeClientRegistered(): Observable<Boolean> {
+        return serviceRegistrationSubject
     }
 
     fun requestLoadConfiguration(configId: String): Observable<CommandResponse> {

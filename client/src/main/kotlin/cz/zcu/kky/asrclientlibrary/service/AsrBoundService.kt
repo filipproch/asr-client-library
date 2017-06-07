@@ -5,6 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import cz.zcu.kky.asrclientlibrary.api.AsrServiceConnection
+import io.reactivex.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 
 /**
@@ -40,9 +41,11 @@ abstract class AsrBoundService : Service() {
         super.onDestroy()
         try {
             AsrServiceConnection.close(this)
-                    .subscribe({}, {})
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .blockingAwait()
         } catch (t: Throwable) {
             // ignore all exceptions
+            Timber.e(t)
         }
 
         stopForeground(true)

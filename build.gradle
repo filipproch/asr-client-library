@@ -27,7 +27,7 @@ project.ext {
     compileSdkVersion = 25
     buildToolsVersion = '25.0.2'
 
-    projectVersion = '1.0.2'
+    projectVersion = '1.0.3'
 }
 
 allprojects {
