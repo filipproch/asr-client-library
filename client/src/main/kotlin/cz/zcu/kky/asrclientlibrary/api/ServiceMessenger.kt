@@ -89,44 +89,37 @@ internal class ServiceMessenger {
                 .firstElement()
     }
 
-    internal fun sendCommand(commandId: String, code: Int, data: Bundle): Observable<CommandResponse> {
-        return Observable.create<CommandResponse> {
-            if (remoteMessenger == null) {
-                it.onError(RuntimeException("remoteMessenger = null, is service connected?"))
-                return@create
-            }
+    internal fun sendCommand(commandId: String, code: Int, data: Bundle) {
+        if (remoteMessenger == null) {
+            throw RuntimeException("remoteMessenger = null, is service connected?")
+        }
 
-            val msg = Message.obtain(null, code)
-            val bundle = Bundle()
-            bundle.putString(AsrCommand.FIELD_COMMAND_ID, commandId)
-            if (clientId !== null) {
-                bundle.putString(AsrCommand.FIELD_CLIENT_ID, clientId)
-            }
-            bundle.putAll(data)
+        val msg = Message.obtain(null, code)
+        val bundle = Bundle()
+        bundle.putString(AsrCommand.FIELD_COMMAND_ID, commandId)
+        if (clientId !== null) {
+            bundle.putString(AsrCommand.FIELD_CLIENT_ID, clientId)
+        }
+        bundle.putAll(data)
 
-            try {
-                msg.data = bundle
-                msg.replyTo = clientMessenger
-                remoteMessenger?.send(msg)
-            } catch (e: DeadObjectException) {
-                // we are disconnected from the service (unexpectedly)
-                it.onError(AsrClientDisconnectedException())
-                remoteMessenger = null
-            }
-
-            it.onComplete()
+        try {
+            msg.data = bundle
+            msg.replyTo = clientMessenger
+            remoteMessenger?.send(msg)
+        } catch (e: DeadObjectException) {
+            // we are disconnected from the service (unexpectedly)
+            throw AsrClientDisconnectedException()
+            remoteMessenger = null
         }
     }
 
     fun sendCommand(code: Int, data: Bundle = Bundle.EMPTY): Observable<CommandResponse> {
         return Single.just(RandomKey.generate())
                 .flatMapObservable { commandId ->
-                    Observable.merge(
-                            observeCommandResponses().filter { it.commandId == commandId }
-                                    .take(1)
-                                    .map { CommandResponse.fromResponse(it) },
-                            sendCommand(commandId, code, data)
-                    )
+                    observeCommandResponses().filter { it.commandId == commandId }
+                            .take(1)
+                            .map { CommandResponse.fromResponse(it) }
+                            .doOnSubscribe { sendCommand(commandId, code, data) }
                 }
                 .onErrorReturn { CommandResponse.fromError(it) }
                 .startWith(CommandResponse.WAITING)

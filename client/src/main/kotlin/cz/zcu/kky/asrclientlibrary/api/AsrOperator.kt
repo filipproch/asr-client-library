@@ -61,6 +61,16 @@ class AsrOperator internal constructor() {
                     serviceEventSubject.onNext(it)
                 }
 
+        messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_ENERGY_LEVEL_CHANGED)
+                .map {
+                    it.data.classLoader = AsrEngineResult::class.java.classLoader
+                    it.data.getParcelable<AsrEngineEnergyLevel>(AsrEvent.FIELD_RESPONSE_OBJECT)
+                }
+                .map { AsrEngineEnergyLevelEvent(it) }
+                .subscribe {
+                    serviceEventSubject.onNext(it)
+                }
+
         messenger.observeEvent(AsrEvent.EVENT_ASR_ENGINE_STATE_CHANGED)
                 .map {
                     it.data.classLoader = AsrEngineState::class.java.classLoader
